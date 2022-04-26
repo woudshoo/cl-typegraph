@@ -116,14 +116,16 @@
 	(setf (dy node) (+ *node-label-font-size* t-a t-p b-a b-p))))))
 
 (defmethod adjust-graph-node-size ((node graph-node) (box box) fixed-width fixed-height)
+  (unless (and fixed-width fixed-height)
+    (compute-natural-box-size box))
   (tt::with-quad (l-a t-a r-a b-a) (size-adjust (decoration node))
     (tt::with-quad (l-p t-p r-p b-p) (padding node)
       (if fixed-width
 	  (setf (dx node) (or (dx node) (+  (dx box) l-a l-p r-a r-p)))
-	  (setf (dx node) (+ (compute-boxes-natural-size (boxes box) #'dx) l-a l-p r-a r-p)))
+	  (setf (dx node) (+ (dx box) l-a l-p r-a r-p)))
       (if fixed-height
 	  (setf (dy node) (or (dy node) (+ (dy box) t-a t-p b-a b-p)))
-	  (setf (dy node) (+ (compute-boxes-natural-size (boxes box) #'dy) t-a t-p b-a b-p))))))
+	  (setf (dy node) (+ (dy box) t-a t-p b-a b-p))))))
 
 (defmethod content-x ((node graph-node))
   (with-quad (l-d) (size-adjust (decoration node))
