@@ -27,7 +27,9 @@
 
 (defclass graph-node-decoration-box ()
   ((background-color :accessor background-color :initarg :background-color :initform '(1.0 1.0 1.0))
+   (background-transparency :accessor background-transparency :initarg :background-transparency :initform 1.0)
    (border-color :accessor border-color :initarg :border-color :initform '(0.0 0.0 0.0))
+   (border-transparency :accessor border-transparency :initarg :border-transparency :initform nil)
    (border-width :accessor border-width :initarg :border-width :initform 1)
    (size-adjust :accessor size-adjust :initarg :size-adjust :initform 0)))
 
@@ -106,36 +108,45 @@
 (defmethod size-adjust (thing)
   0)
 
-(defmethod adjust-graph-node-size ((node graph-node) data fixed-width fixed-height)
-  (tt::with-quad (l-a t-a r-a b-a) (size-adjust (decoration node))
-    (tt::with-quad (l-p t-p r-p b-p) (padding node)
-      (unless fixed-width
-	(setf (dx node) (+ (pdf::text-width (format nil "~a" data) *node-label-font* *node-label-font-size*)
-			   l-a l-p r-a r-p)))
-      (unless fixed-height
-	(setf (dy node) (+ *node-label-font-size* t-a t-p b-a b-p))))))
+(defmethod adjust-graph-node-size ((node graph-node) (data t) fixed-height fixed-width)
+  (with-quad (l-a t-a r-a b-a) (size-adjust (decoration node))
+    (with-quad (l-p t-p r-p b-p) (padding node)
+      (unless fixed-width (incf (dx node) (+ l-a l-p r-a r-p)))
+      (unless fixed-height (incf (dy node) (+ t-a t-p b-a b-p))))))
+
+(defmethod adjust-graph-node-size ((node graph-node) (data string) fixed-width fixed-height)
+  (unless fixed-width
+    (setf (dx node) (pdf::text-width (format nil "~a" data) *node-label-font* *node-label-font-size*)))
+  (unless fixed-height
+    (setf (dy node) *node-label-font-size*))
+  (call-next-method))
 
 (defmethod adjust-graph-node-size ((node graph-node) (box box) fixed-width fixed-height)
   (unless (and fixed-width fixed-height)
     (compute-natural-box-size box))
-  (tt::with-quad (l-a t-a r-a b-a) (size-adjust (decoration node))
-    (tt::with-quad (l-p t-p r-p b-p) (padding node)
-      (if fixed-width
-	  (setf (dx node) (or (dx node) (+  (dx box) l-a l-p r-a r-p)))
-	  (setf (dx node) (+ (dx box) l-a l-p r-a r-p)))
-      (if fixed-height
-	  (setf (dy node) (or (dy node) (+ (dy box) t-a t-p b-a b-p)))
-	  (setf (dy node) (+ (dy box) t-a t-p b-a b-p))))))
+  (if fixed-width
+      (setf (dx node) (or (dx node) (dx box)))
+      (setf (dx node) (dx box)))
+  (if fixed-height
+      (setf (dy node) (or (dy node) (dy box)))
+      (setf (dy node) (dy box)))
+  (call-next-method))
 
-(defmethod content-x ((node graph-node))
+(defmethod content-offset-x ((node graph-node))
   (with-quad (l-d) (size-adjust (decoration node))
     (with-quad (l-p) (padding node)
-      (+ (x node) l-d l-p ))))
+      (+ l-d l-p ))))
 
-(defmethod content-y ((node graph-node))
+(defmethod content-offset-y ((node graph-node))
   (with-quad (l-d t-d) (size-adjust (decoration node))
     (with-quad (l-p t-p) (padding node)
-      (- (y node) t-d t-p ))))
+      (+ t-d t-p ))))
+
+(defmethod content-x ((node graph-node))
+  (+ (x node) (content-offset-x node)))
+
+(defmethod content-y ((node graph-node))
+  (- (y node) (content-offset-y node)))
 
 
 
@@ -279,12 +290,20 @@ edge [fontname=~a,fontsize=~a];
 
 (defmethod stroke-node-decoration ((node graph-node) (decoration graph-node-decoration-box))
   (pdf:with-saved-state
+    (when (background-color decoration)
       (pdf:set-color-fill (background-color decoration))
-      (when (border-width decoration)
-	(pdf:set-color-stroke (border-color decoration))
-	(pdf:set-line-width (border-width decoration))
-	(pdf:basic-rect (x node) (y node)(dx node)(- (dy node)))
-	(pdf:fill-and-stroke))))
+      (pdf:set-fill-transparency (background-transparency decoration)))
+    (when (border-width decoration)
+      (pdf:set-color-stroke (border-color decoration))
+      (pdf:set-line-width (border-width decoration)))
+    (pdf:basic-rect (x node) (y node)(dx node)(- (dy node)))
+    (cond
+      ((and (background-color decoration) (border-width decoration))
+       (pdf:fill-and-stroke))
+      ((background-color decoration)
+       (pdf:fill-path))
+      ((border-width decoration)
+       (pdf:stroke)))))
 
 
 (defmethod stroke-node-content ((node graph-node) data)
