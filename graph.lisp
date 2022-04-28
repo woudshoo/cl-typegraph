@@ -35,7 +35,17 @@
 
 (defparameter +box+ (make-instance 'graph-node-decoration-box))
 
-(defclass graph-node (box)
+(defclass graph-box-mixin ()
+  ()
+  (:documentation "Helper class to unify drawing of borders and adding margins/padding.
+Used by graph-node and graph classes"))
+
+(defmethod x ((box graph-box-mixin)) 0)
+(defmethod y ((box graph-box-mixin)) 0)
+(defmethod padding ((box graph-box-mixin)) 0)
+(defmethod decoration ((box graph-box-mixin)) nil)
+
+(defclass graph-node (box graph-box-mixin)
   ((id :accessor id :initform (make-graph-node-id))
    (data :accessor data :initarg :data :initform nil)
    (dot-attributes :accessor dot-attributes :initarg :dot-attributes :initform nil)
@@ -63,20 +73,18 @@
 
 ;;; dot-attributes is a list of (attribute value) pairs ex: ("rankdir" "LR")
 
-(defclass graph ()
+(defclass graph (box graph-box-mixin)
   ((nodes :accessor nodes :initform (make-hash-table :test #'equal))
    (edges :accessor edges :initform (make-hash-table :test #'equal))
    (dot-attributes :accessor dot-attributes :initarg :dot-attributes :initform nil)
    (rank-constraints :accessor rank-constraints :initform nil)
-   (background-color :accessor background-color :initarg :background-color :initform '(1.0 1.0 1.0))
-   (border-color :accessor border-color :initarg :border-color :initform '(0.0 0.0 0.0))
-   (border-width :accessor border-width :initarg :border-width :initform 1)
+   (decoration :accessor decoration :initarg :decoration :initform nil)
    (landscape-layout :accessor landscape-layout :initarg :landscape-layout :initform nil)
    (max-dx :accessor max-dx :initarg :max-dx :initform 400)
    (max-dy :accessor max-dy :initarg :max-dy :initform 400)
-   (scale :accessor scale :initform 1)
-   (dx :accessor dx)
-   (dy :accessor dy)))
+   (scale :accessor scale :initform 1)))
+
+(defmethod y ((box graph)) (dy box))
 
 (defmethod initialize-instance :after ((node graph-node) 
 				       &key fixed-height fixed-width graph &allow-other-keys)
@@ -132,20 +140,20 @@
       (setf (dy node) (dy box)))
   (call-next-method))
 
-(defmethod content-offset-x ((node graph-node))
+(defmethod content-offset-x ((node graph-box-mixin))
   (with-quad (l-d) (size-adjust (decoration node))
     (with-quad (l-p) (padding node)
       (+ l-d l-p ))))
 
-(defmethod content-offset-y ((node graph-node))
+(defmethod content-offset-y ((node graph-box-mixin))
   (with-quad (l-d t-d) (size-adjust (decoration node))
     (with-quad (l-p t-p) (padding node)
       (+ t-d t-p ))))
 
-(defmethod content-x ((node graph-node))
+(defmethod content-x ((node graph-box-mixin))
   (+ (x node) (content-offset-x node)))
 
-(defmethod content-y ((node graph-node))
+(defmethod content-y ((node graph-box-mixin))
   (- (y node) (content-offset-y node)))
 
 
@@ -182,7 +190,7 @@ edge [fontname=~a,fontsize=~a];
     (format s "}~%")))
 
 (defmethod gen-graph-dot-data ((node graph-node) s)
-  (format s "~s [fixedsize=true, width=~a, height=~a"
+  (format s "~s [fixedsize=true, width=~a, height=~a, shape=rect"
 	  (id node)(/ (dx node) 72.0)(/ (dy node) 72.0))
   (gen-dot-attributes s (dot-attributes node) t)
   (format s "];~%"))
@@ -268,14 +276,9 @@ edge [fontname=~a,fontsize=~a];
 
 (defmethod stroke ((graph graph) x y)
   (pdf:with-saved-state
-      (pdf:set-color-fill (background-color graph))
-      (when (border-width graph)
-	(pdf:set-color-stroke (border-color graph))
-	(pdf:set-line-width (border-width graph))
-	(pdf:basic-rect x y (dx graph)(- (dy graph)))
-	(pdf:fill-and-stroke))
       (pdf:translate x (- y (dy graph)))
       (pdf:scale (scale graph)(scale graph))
+      (stroke-node-decoration graph (decoration graph))
       (iter (for (id edge) in-hashtable (edges graph))
 	    (stroke-edge edge (data edge)))
       (iter (for (id node) in-hashtable (nodes graph))
@@ -286,9 +289,9 @@ edge [fontname=~a,fontsize=~a];
   (stroke-node-content node data))
 
 
-(defmethod stroke-node-decoration ((node graph-node) decoration))
+(defmethod stroke-node-decoration ((node box) decoration))
 
-(defmethod stroke-node-decoration ((node graph-node) (decoration graph-node-decoration-box))
+(defmethod stroke-node-decoration ((node box) (decoration graph-node-decoration-box))
   (pdf:with-saved-state
     (when (background-color decoration)
       (pdf:set-color-fill (background-color decoration))
