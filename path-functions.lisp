@@ -41,3 +41,48 @@ curve PATH at first point."
 	  :finally (return (normalized-vector (- y1 y0) (- x1 x0))))))
 
 
+(defun tighten-path (path looseness)
+  (flet ((step-6 (list)
+	   (cdddr (cdddr list)))
+	 (between (a b)
+	   (+ (* (- 1 looseness) a)
+	      (* looseness b))))
+    (loop
+      :for (ax ay bx by cx cy dx dy next) :on path :by #'step-6
+      :while dy
+      :append (list ax ay
+	       (between ax bx)
+	       (between ay by)
+	       (between dx cx)
+	       (between dy cy))
+	:into result
+      :unless next :append (list dx dy) :into result
+      :finally (return result))))
+
+
+
+(defun draw-point (x y color)
+  (pdf:with-saved-state
+    (pdf:set-color-fill color)
+    (pdf:basic-rect (- x 2) (- y 2) 4 4)
+    (pdf:fill-path)))
+
+(defun make-pdf-bezier-curve (points)
+  (pdf:move-to (pop points) (pop points))
+  (loop :while points
+	:do
+	   (pdf:bezier-to (pop points) (pop points)
+			  (pop points) (pop points)
+			  (pop points) (pop points))))
+
+(defun draw-bezier-with-control-points (path)
+  (pdf:with-saved-state
+    (pdf:set-color-stroke "black")
+    (make-pdf-bezier-curve path)
+    (pdf:stroke)
+    (draw-point (pop path) (pop path) "green")
+    (loop :while path
+	  :do
+	     (draw-point (pop path) (pop path) "blue")
+	     (draw-point (pop path) (pop path) "blue")
+	     (draw-point (pop path) (pop path) "green"))))
