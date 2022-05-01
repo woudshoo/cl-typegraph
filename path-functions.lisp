@@ -86,3 +86,17 @@ curve PATH at first point."
 	     (draw-point (pop path) (pop path) "blue")
 	     (draw-point (pop path) (pop path) "blue")
 	     (draw-point (pop path) (pop path) "green"))))
+
+
+(defun polyline-from-bezier (points)
+  "Returns a polyline as ((x1 y1) (x2 y2)...) from
+the bezier cureve in points, as (x1 y1 x2 y2 ...).
+
+The construction is done by dropping the control points."
+  (let ((result (list)))
+    (push (list (pop points) (pop points)) result)
+    (loop :while points
+	  :do
+	     (loop :repeat 4 :do (pop points))
+	     (push (list (pop points) (pop points)) result))
+    (nreverse result)))
