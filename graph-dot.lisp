@@ -99,6 +99,8 @@ edge [fontname=~a,fontsize=~a];
   (let* ((file-id (make-graph-file-id))
 	 (dot-file (concatenate 'string *graph-file-prefix* file-id ".dot"))
 	 (result-file  (concatenate 'string *graph-file-prefix* file-id ".txt")))
+    (iter (for (nil node) in-hashtable (nodes graph))
+      (adjust-graph-node-size node (data node)))
     (unwind-protect
 	 (progn
 	   (with-open-file (s dot-file :direction :output :if-exists :supersede)
@@ -119,4 +121,4 @@ edge [fontname=~a,fontsize=~a];
 	     (ignore-errors (delete-file result-file))))
     ;; post process to adjust cluster sizes based on content
     (iter (for (nil cluster) in-hashtable (clusters graph))
-	  (adjust-graph-node-size cluster (data cluster) nil nil))))
+	  (adjust-graph-node-size cluster (data cluster)))))

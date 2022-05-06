@@ -24,44 +24,37 @@
 
 
 (defmethod initialize-instance :after ((node abstract-graph-node) 
-				       &key fixed-height fixed-width graph &allow-other-keys)
-  (adjust-graph-node-size node (data node) fixed-width fixed-height)
+				       &key graph &allow-other-keys)
   (add-to-graph graph node))
 
 
-(defgeneric adjust-graph-node-size (thing data fixed-width fixed-height)
-  (:documentation  "Adjust NODE size to contain DATA.
+(defgeneric adjust-graph-node-size (thing data)
+  (:documentation  "Adjust NODE size to contain DATA.q
 
 The size of the THING will be set to the size of DATA plus the size of the padding and
-the size needed for the decoration.
-
-If one of the FIXED-HEIGHT or FIXED-WIDTH is a generalized true, the corresponding
-height or width will NOT be modified by this method.")
+the size needed for the decoration.")
   
-  (:method ((node abstract-graph-node) data fixed-width fixed-height)
-    (unless fixed-width (incf (dx node) (content-size-adjust-x node)))
-    (unless fixed-height (incf (dy node) (content-size-adjust-y node))))
+  (:method ((node abstract-graph-node) data)
+    (incf (dx node) (content-size-adjust-x node))
+    (incf (dy node) (content-size-adjust-y node)))
 
 
-  (:method ((node graph-node) (data string) fixed-width fixed-height)
+  (:method ((node graph-node) (data string))
     "For NODES containing plain strings, thiw will calculate the NODE size"
-    (unless fixed-width
-      (setf (dx node) (pdf::text-width (format nil "~a" data) *node-label-font* *node-label-font-size*)))
-    (unless fixed-height
-      (setf (dy node) *node-label-font-size*))
+    (setf (dx node) (pdf::text-width (format nil "~a" data) *node-label-font* *node-label-font-size*))
+    (setf (dy node) *node-label-font-size*)
     (call-next-method))
 
-  (:method ((node graph-node) (box box) fixed-width fixed-height)
+  (:method ((node graph-node) (box box))
     "For NODES containing a typeset BOX, it will size the NODE based
 on the natural size of BOX."
-    (unless (and fixed-width fixed-height)
-      (compute-natural-box-size box))
-    (unless fixed-width	 (setf (dx node) (dx box)))
-    (unless fixed-height (setf (dy node) (dy box)))
+    (compute-natural-box-size box)
+    (setf (dx node) (dx box))
+    (setf (dy node) (dy box))
     (call-next-method))
 
 
-  (:method ((cluster graph-cluster) (data list) fixed-width fixed-height)
+  (:method ((cluster graph-cluster) (data list))
     "For CLUSTER determine the size based on the boxes in DATA.
 
 In addition this will adjust the X and Y coordinate so the CLUSTER
@@ -80,10 +73,8 @@ origin is set relative to the location of DATA"
 	       (setf
 		(x cluster) min-x
 		(y cluster)  max-y)
-	       (unless fixed-width
-		 (setf (dx cluster) (- max-x min-x)))
-	       (unless fixed-height
-		 (setf (dy cluster) (- max-y min-y)))))
+	       (setf (dx cluster) (- max-x min-x))
+	       (setf (dy cluster) (- max-y min-y))))
     (call-next-method)
     (decf (x cluster) (content-offset-x cluster))
     (incf (y cluster) (content-offset-y cluster))))
