@@ -49,7 +49,7 @@
       (let ((head-arrow-type (getf (edge-arrows edge) :head))
 	    (tail-arrow-type (getf (edge-arrows edge) :tail)))
 	(stroke-arrow edge tail-arrow-type (points edge))
-	(make-pdf-bezier-curve (points edge))
+	(bezier-from-xy-points (points edge))
 	(pdf:stroke)
 	(stroke-arrow edge head-arrow-type (reverse-path (points edge)))
 	(stroke-edge-label edge))))

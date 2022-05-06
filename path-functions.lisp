@@ -67,7 +67,12 @@ curve PATH at first point."
     (pdf:basic-rect (- x 2) (- y 2) 4 4)
     (pdf:fill-path)))
 
-(defun make-pdf-bezier-curve (points)
+(defun bezier-from-xy-points (points)
+  "Makes PDF bezier path based on the coordinates in POINTS.
+
+Points is of the form (x1 y1 x2 y2 x3 y3 ... xn yn).
+Here n shoud be a multiple of 3 plus 1, so n=4, 7, 10, ...
+"
   (pdf:move-to (pop points) (pop points))
   (loop :while points
 	:do
@@ -78,7 +83,7 @@ curve PATH at first point."
 (defun draw-bezier-with-control-points (path)
   (pdf:with-saved-state
     (pdf:set-color-stroke "black")
-    (make-pdf-bezier-curve path)
+    (bezier-from-xy-points path)
     (pdf:stroke)
     (draw-point (pop path) (pop path) "green")
     (loop :while path
