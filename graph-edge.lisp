@@ -4,13 +4,18 @@
 
 (in-package #:typeset)
 
+(defun direction-type-impl (d)
+  (member d `(:up :down :left :right :none)))
+
+(deftype direction ()
+  `(and symbol (satisfies direction-type-impl)))
 
 (defclass abstract-graph-edge ()
   ((id :accessor id :initform (make-graph-node-id))
    (label :accessor label :initarg :label :initform nil)
    (head :accessor head :initarg :head)
    (tail :accessor tail :initarg :tail)
-   (direction :accessor direction :initarg :direction :initform :forward)
+   (direction :accessor direction :initarg :direction :initform :none :type direction)
    (edge-arrows :accessor edge-arrows :initarg :edge-arrows :initform '(:head :arrow))
    (data :accessor data :initarg :data :initform nil)
    (dot-attributes :accessor dot-attributes :initarg :dot-attributes :initform nil)
