@@ -24,6 +24,7 @@
 	       (:file "graph-node")
 	       (:file "graph-edge")
 	       (:file "graph")
-	       (:file "graph-dot"))
-  :depends-on (:cl-typesetting))
+	       (:file "graph-dot")
+	       (:file "graph-cps"))
+  :depends-on (:cl-typesetting :cps))
 

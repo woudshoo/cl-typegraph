@@ -60,6 +60,13 @@ curve PATH at first point."
       :finally (return result))))
 
 
+(defun bezier-list-for-line (a-x a-y b-x b-y)
+  "Returns a list of points describing a bezier curve
+that draws a line between point A and B"
+  (list a-x a-y
+	b-x b-y
+	a-x a-y
+	b-x b-y))
 
 (defun draw-point (x y color)
   (pdf:with-saved-state
