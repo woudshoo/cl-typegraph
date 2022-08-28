@@ -29,7 +29,7 @@
 
 
 (defgeneric adjust-graph-node-size (thing data)
-  (:documentation  "Adjust NODE size to contain DATA.q
+  (:documentation  "Adjust NODE size to contain DATA.
 
 The size of the THING will be set to the size of DATA plus the size of the padding and
 the size needed for the decoration.")

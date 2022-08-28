@@ -141,20 +141,11 @@ The result is sorted increasingly on column"
 	    (n (id node)
 		  (setf (x node) (px id)
 			(y node) (py id))))
-	   
-	   
-#+nil      (iter (for (id node) in-hashtable (nodes graph))
-	     (n id node))
+
       (process-nodes graph problem)
-#+nil      (iter (for (id edge) in-hashtable (edges graph))
-	     (e edge (id (tail edge)) (id (head edge))))
       (process-edges graph problem)
       (setf (dx graph) 1200
-	    (dy graph) 1200))
-    (format t "Group by column: ~A~%" (group-by-column graph problem))
-    (format t "Group by row: ~A~%" (group-by-row graph problem))
-    (format t "Column Widths: ~A~%" (calculate-column-widths graph problem) )
-    (format t "Row Heights: ~A~%" (calculate-row-heights graph problem) ))
+	    (dy graph) 1200)))
   
   graph)
 

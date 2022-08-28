@@ -24,6 +24,8 @@
 	(write-line value s)))
 
 (defmethod gen-graph-dot-data ((graph graph) s)
+  (iter (for (nil node) in-hashtable (nodes graph))
+    (adjust-graph-node-size node (data node)))
   (let ((*print-readably* nil))
     (format s "digraph G {
 size=\"~a,~a\";
@@ -99,8 +101,6 @@ edge [fontname=~a,fontsize=~a];
   (let* ((file-id (make-graph-file-id))
 	 (dot-file (concatenate 'string *graph-file-prefix* file-id ".dot"))
 	 (result-file  (concatenate 'string *graph-file-prefix* file-id ".txt")))
-    (iter (for (nil node) in-hashtable (nodes graph))
-      (adjust-graph-node-size node (data node)))
     (unwind-protect
 	 (progn
 	   (with-open-file (s dot-file :direction :output :if-exists :supersede)
