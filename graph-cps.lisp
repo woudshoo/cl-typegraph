@@ -30,10 +30,14 @@
     (iter (for (nil node) in-hashtable (nodes graph))
       (gen-graph-cps-data node problem))
     ;;; Add high-level constraints
-    (cps::add-constraint problem (make-instance 'cps::basic-all-different :variables (cps::variables problem)))
+    (cps:add-constraint problem (make-instance 'cps::basic-all-different :variables (cps::variables problem)))
     ;;; Add all edge induced constraints
     (iter (for (nil edge) in-hashtable (edges graph))
       (gen-graph-cps-data edge problem))
+
+    (iter (for (nil . nodes) in (rank-constraints graph))
+      (cps:add-constraint problem (make-instance 'cps:basic-y-= :variables (cps::set-from-list (mapcar 'id nodes)))))
+    
     problem))
 
 
@@ -128,25 +132,16 @@ The result is sorted increasingly on column"
     (adjust-graph-node-size node (data node)))
   (let ((problem (make-graph-cps-problem graph))
 	(solver (make-instance 'cps:basic-solver)))
+
     (setf problem (cps:solve solver problem))
 
-    (labels ((xy (id)
-	       (cps::any-value (cps::domain problem (var-name-from-id-cps id))))
-	    (px (id)
-	      (+ 100 (* (car (xy id)) *cps-node-width*)))
-	    (py (id)
-	      (+ 100 (* (cdr (xy id)) *cps-node-height*)))
-	     (e (e from to)
-	       (setf (points e) (bezier-list-for-line (px from) (py from) (px to) (py to))))
-	    (n (id node)
-		  (setf (x node) (px id)
-			(y node) (py id))))
+    (unless problem (error "Could not calculate layout"))
+    (process-nodes graph problem)
+    (process-edges graph problem)
 
-      (process-nodes graph problem)
-      (process-edges graph problem)
-      (setf (dx graph) 1200
-	    (dy graph) 1200)))
-  
+    (setf (dx graph) 1200
+	  (dy graph) 1200))
+
   graph)
 
 
