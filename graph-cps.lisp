@@ -1,7 +1,7 @@
 (in-package #:typeset)
 
-(defparameter *cps-max-x* 10)
-(defparameter *cps-max-y* 10)
+(defparameter *cps-max-x* 12)
+(defparameter *cps-max-y* 12)
 
 (defparameter *cps-node-width* 100)
 (defparameter *cps-node-height* 100)
@@ -10,6 +10,13 @@
 (defparameter *cps-node-height-margin* 10)
 ;;; Creating Problem
 (defun var-name-from-id-cps (id)  id)
+;;; node the functions below are wrong, they lead to name clashes.
+;;; probably should be a symbol or a list or something different
+(defun var-name-from-id-cluster-ll (id) (concatenate 'string id "-ll"))
+(defun var-name-from-id-cluster-ur (id) (concatenate 'string id "-ur"))
+
+(defun seq-from-1-set-1 (a set b)
+  (fset:with-last (fset:concat (fset:seq a) set) b))
 
 (defmethod gen-graph-cps-data ((node graph-node) (problem cps:problem))
   (cps:add-2d-variable problem (var-name-from-id-cps (id node))
@@ -24,6 +31,20 @@
       (:left  (cps:add-<x-constraint problem head tail))
       (:right (cps:add-<x-constraint problem tail head)))))
 
+(defmethod gen-graph-cps-data ((cluster graph-cluster) (problem cps:problem))
+  (let* ((id (id cluster))
+	 (ll (var-name-from-id-cluster-ll id))
+	 (ur (var-name-from-id-cluster-ur id))
+	 (inside (cps::set-from-list (mapcar #'id (data cluster))))
+	 (outside (fset:set-difference (cps:variables problem) inside)))
+    (cps:add-constraint problem
+			(make-instance 'cps:basic-2d-q1-<=-1-*-1
+				       :var-seq (seq-from-1-set-1 ll (fset:set-difference inside (fset:set ll ur)) ur) ))
+    (cps:add-constraint problem
+			(make-instance 'cps:basic-2d-not-q1-<=-1-*-1
+				       :var-seq (seq-from-1-set-1 ll (fset:set-difference outside (fset:set ll ur)) ur)))))
+
+
 (defun make-graph-cps-problem (graph)
   (let ((problem (make-instance 'cps:basic-problem)))
     ;;; Add all basic  nodes
@@ -37,7 +58,14 @@
 
     (iter (for (nil . nodes) in (rank-constraints graph))
       (cps:add-constraint problem (make-instance 'cps:basic-y-= :variables (cps::set-from-list (mapcar 'id nodes)))))
-    
+
+    (iter (for (id . nil) in-hashtable (clusters graph))
+	  (cps:add-2d-variable problem (var-name-from-id-cluster-ll id)
+			       :max-x *cps-max-x* :max-y *cps-max-y*)
+	  (cps:add-2d-variable problem (var-name-from-id-cluster-ur id)
+			       :max-x *cps-max-x* :max-y *cps-max-y*))
+    (iter (for (nil cluster) in-hashtable (clusters graph))
+	  (gen-graph-cps-data cluster problem))
     problem))
 
 
@@ -138,7 +166,8 @@ The result is sorted increasingly on column"
     (unless problem (error "Could not calculate layout"))
     (process-nodes graph problem)
     (process-edges graph problem)
-
+    (iter (for (nil cluster) in-hashtable (clusters graph))
+	  (adjust-graph-node-size cluster (data cluster)))
     (setf (dx graph) 1200
 	  (dy graph) 1200))
 
