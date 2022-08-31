@@ -26,5 +26,5 @@
 	       (:file "graph")
 	       (:file "graph-dot")
 	       (:file "graph-cps"))
-  :depends-on (:cl-typesetting :cps))
+  :depends-on (:cl-typesetting :cps :alexandria))
 

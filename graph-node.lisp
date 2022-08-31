@@ -77,7 +77,7 @@ on the natural size of BOX."
 
 In addition this will adjust the X and Y coordinate so the CLUSTER
 origin is set relative to the location of DATA"
-    (loop :for b :in (data cluster)
+    (loop :for b :in data
 	  :for x = (x b)
 	  :for y = (y b)
 	  :for dx = (dx b)

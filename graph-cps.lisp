@@ -164,10 +164,8 @@ The result is sorted increasingly on column"
     (process-nodes graph problem)
     (process-edges graph problem)
     (iter (for (nil cluster) in-hashtable (clusters graph))
-	  (adjust-graph-node-size cluster (data cluster)))
-    (setf (dx graph) 1200
-	  (dy graph) 1200))
-
+      (adjust-graph-node-size cluster (data cluster)))
+    (adjust-graph-size graph))
   graph)
 
 

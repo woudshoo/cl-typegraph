@@ -49,6 +49,24 @@
 (defun add-rank-constraint (graph constraint nodes)
   (push (cons constraint nodes) (rank-constraints graph)))
 
+(defun adjust-graph-size (graph)
+  "Calculates and sets the graph size based on the content.
+TODO, add padding?"
+  (flet ((update-size-based-on (content)
+	   (loop :for n :in content
+		 :for x = (x n)
+		 :for y = (y n)
+		 :for dx = (dx n)
+		 :maximizing (+ x dx) :into max-x
+		 :maximizing y :into max-y
+		 :finally
+		    (progn
+		      (setf (dx graph) (max (dx graph) max-x))
+		      (setf (dy graph) (max (dy graph) max-y))))))
+    (setf (dx graph) 0
+	  (dy graph) 0)
+    (update-size-based-on (alexandria:hash-table-values (nodes graph)))
+    (update-size-based-on (alexandria:hash-table-values (clusters graph)))))
 
 (defun graph-box (graph &rest args)
   (let ((dx (dx graph))
