@@ -4,16 +4,34 @@
 
 (in-package #:typeset)
 
+(defvar *graph-id-counter* 0)
+
+(defun make-graph-node-id ()
+  (format nil "N~d" (incf *graph-id-counter*)))
 
 (defclass abstract-graph-node (box graph-positioning-mixin)
   ((id :accessor id :initform (make-graph-node-id))
-   (data :accessor data :initarg :data :initform nil)
-   (dot-attributes :accessor dot-attributes :initarg :dot-attributes :initform nil)
-   (decoration :accessor decoration :initarg :decoration :initform +box+)
+   (data :accessor data :initarg :data :initform nil :documentation
+	 "Contains the content to be rendered.  This is either a string, a typeset:box instance
+or in general anything that will be interpreted by a specific subclass to draw (e.g. cluster contains a list
+of nodes as data.)")
+   (dot-attributes :accessor dot-attributes :initarg :dot-attributes :initform nil :documentation
+		   "Attributes used for the dot (graphviz) layout algorithm.")
+   (decoration :accessor decoration :initarg :decoration :initform +box+ :documentation
+	       "How to decorate the content (data) of the node.  This is an instannce of
+a subclass of abstract-decoration.  The default is +box+, which draws a box around the contant (data)")
    (padding :accessor padding :initarg :padding :initform *box-padding*)
-   (x :accessor x :initform 0)
-   (y :accessor y :initform 0))
-  (:default-initargs :dx nil :dy nil))
+   (x :accessor x :initform 0 :documentation
+      "x-Position of the node for rendering.  Note that the this is NOT the
+same as the position the content will be rendered, because the
+decoration and padding will be taken into account.")
+   (y :accessor y :initform 0  :documentation
+      "y-Position of the node for rendering.  Note that the
+this is NOT the same as the position the content will be rendered, because the decoration and padding
+will be taken into account."))
+  (:default-initargs :dx nil :dy nil
+		     :decoration +box+
+		     :padding *box-padding*))
 
 
 (defclass graph-node (abstract-graph-node) ())

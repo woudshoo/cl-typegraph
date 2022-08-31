@@ -4,15 +4,8 @@
 
 (in-package #:typeset)
 
-
-(defvar *graph-id-counter* 0)
-
-(defun make-graph-node-id ()
-  (format nil "N~d" (incf *graph-id-counter*)))
-
 (defun make-graph-file-id ()
   (format nil "F~d" (incf *graph-id-counter*)))
-
 
 (defun gen-dot-attributes (s attributes &optional comma)
   (loop for (attribute value) in attributes do

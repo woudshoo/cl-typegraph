@@ -3,11 +3,9 @@
 (defparameter *cps-max-x* 12)
 (defparameter *cps-max-y* 12)
 
-(defparameter *cps-node-width* 100)
-(defparameter *cps-node-height* 100)
-
 (defparameter *cps-node-width-margin* 10)
 (defparameter *cps-node-height-margin* 10)
+
 ;;; Creating Problem
 (defun var-name-from-id-cps (id)  id)
 ;;; node the functions below are wrong, they lead to name clashes.
@@ -113,7 +111,6 @@ The result is sorted increasingly on column"
 	  :for pos = 0 :then (+ pos height *cps-node-height-margin*)
 	  :for height =  (reduce #'max nodes :key #'dy :initial-value 0)
 	  :collect (list  col (+ pos height) height))))
-
 
 
 (defun process-nodes (graph problem)

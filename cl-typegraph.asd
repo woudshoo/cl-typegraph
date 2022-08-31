@@ -8,7 +8,7 @@
 
 (defsystem :cl-typegraph
   :name "cl-typegraph"
-  :author "Marc Battyani <marc.battyani@fractalconcept.com>"
+  :author "Marc Battyani <marc.battyani@fractalconcept.com>, Wim Oudshoorn <woudshoo@xs4all.nl"
   :version "0.5"
   :maintainer "Marc Battyani <marc.battyani@fractalconcept.com>"
   :licence "BSD like licence"
