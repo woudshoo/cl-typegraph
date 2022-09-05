@@ -44,12 +44,14 @@
 
 
 (defun make-graph-cps-problem (graph)
-  (let ((problem (make-instance 'cps:basic-problem)))
+  (let ((problem (make-instance 'cps:optimizing-problem)))
     ;;; Add all basic  nodes
     (iter (for (nil node) in-hashtable (nodes graph))
       (gen-graph-cps-data node problem))
     ;;; Add high-level constraints
     (cps:add-constraint problem (make-instance 'cps::basic-all-different :variables (cps::variables problem)))
+    (setf (cps:cost-constraint problem)
+	  (make-instance 'cps:max-2d-manhatten-cost :variables (cps:variables problem)))
     ;;; Add all edge induced constraints
     (iter (for (nil edge) in-hashtable (edges graph))
       (gen-graph-cps-data edge problem))
@@ -156,7 +158,7 @@ The result is sorted increasingly on column"
   (iter (for (nil node) in-hashtable (nodes graph))
     (adjust-graph-node-size node (data node)))
   (let ((problem (make-graph-cps-problem graph))
-	(solver (make-instance 'cps:basic-solver)))
+	(solver (make-instance 'cps:optimizing-solver)))
 
     (setf problem (cps:solve solver problem))
 
