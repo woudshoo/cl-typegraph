@@ -48,7 +48,7 @@ edge [fontname=~a,fontsize=~a];
 
 (defmethod gen-graph-dot-data ((edge abstract-graph-edge) s)
   (format s "~s -> ~s [label=\"~a\", arrowhead=none, color=\"~a\""
-	  (id (head edge)) (id (tail edge))
+	  (id (tail edge)) (id (head edge))
 	  (if (label edge) (label edge) "")
 	  (id edge))
   (gen-dot-attributes s (dot-attributes edge) t)
